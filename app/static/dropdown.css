@@ -1,0 +1,96 @@
+/* ==========================================================================
+   CINEMATIC AUTOMOTIVE DROPDOWN ENGINE
+   Charcoal Black (#171717) + Deep Forest (#06110C) + Crimson Red (#A31C1B)
+   ========================================================================== */
+
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+  user-select: none;
+}
+
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0D1612;
+  border: 1px solid #29372F;
+  color: #F2F0EA;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-select-trigger:hover {
+  border-color: #3D5044;
+  background: #102019;
+}
+
+.custom-select-wrapper.open .custom-select-trigger {
+  border-color: #A31C1B;
+  background: #18251D;
+  box-shadow: 0 0 0 2px rgba(163, 28, 27, 0.3);
+}
+
+.custom-select-arrow {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A31C1B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transition: transform 0.2s ease;
+}
+
+.custom-select-wrapper.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #06110C;
+  border: 1px solid #A31C1B;
+  border-radius: 6px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 14px rgba(163, 28, 27, 0.25);
+  z-index: 1000;
+  max-height: 220px;
+  overflow-y: auto;
+  display: none;
+  padding: 5px;
+}
+
+.custom-select-wrapper.open .custom-select-options {
+  display: block;
+}
+
+.custom-option {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #A7AAA7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s ease;
+}
+
+.custom-option:hover {
+  background: rgba(163, 28, 27, 0.2);
+  color: #F2F0EA;
+  padding-left: 15px;
+}
+
+.custom-option.selected {
+  background: linear-gradient(135deg, #A31C1B 0%, #7F1413 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+}

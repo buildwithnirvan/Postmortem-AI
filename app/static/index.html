@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POSTMORTEM AI — Incident Intelligence Command</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app-container">
+  
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-group">
+        <div class="logo-avatar">
+          <img src="/static/logo.jpg" alt="Postmortem AI" class="logo-img">
+        </div>
+        <div class="logo-text">POSTMORTEM <span class="logo-ai-badge">AI</span></div>
+      </div>
+      <button class="collapse-btn" id="collapse-toggle" title="Toggle Sidebar">☰</button>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item active" data-view="investigation">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">Investigation Copilot</span>
+      </button>
+      <button class="nav-item" data-view="overview">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Executive Overview</span>
+      </button>
+      <button class="nav-item" data-view="incidents">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Incidents Hub</span>
+      </button>
+      <button class="nav-item" data-view="memory">
+        <span class="nav-icon">🧠</span>
+        <span class="nav-label">Memory Intelligence</span>
+      </button>
+      <button class="nav-item" data-view="patterns">
+        <span class="nav-icon">🔁</span>
+        <span class="nav-label">Recurring Patterns</span>
+      </button>
+      <button class="nav-item" data-view="services">
+        <span class="nav-icon">🌐</span>
+        <span class="nav-label">Service Topology</span>
+      </button>
+      <button class="nav-item" data-view="analytics">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">Incident Analytics</span>
+      </button>
+      <button class="nav-item" data-view="reports">
+        <span class="nav-icon">📑</span>
+        <span class="nav-label">Postmortem Reports</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-pill" id="health-indicator">
+        <span class="dot"></span>
+        <span class="health-text">Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- DRAGGABLE RESIZER FOR MAIN NAVIGATION SIDEBAR -->
+  <div class="sidebar-resizer" id="sidebar-resizer" title="Drag to resize navigation sidebar"></div>
+
+  <!-- VIEWPORT -->
+  <div class="viewport">
+    
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <h2 class="page-title" id="page-heading">Investigation Command</h2>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm" id="btn-topbar-new">➕ Report Problem</button>
+        <div class="status-pill" id="model-pill">
+          <span>Model: <strong style="color: var(--champagne-gold);">gpt-oss-120b</strong></span>
+        </div>
+        <div class="status-pill" id="memory-pill">
+          <span>Memory: <strong style="color: var(--ice-cyan);">Hindsight Active</strong></span>
+        </div>
+        <button class="theme-toggle-btn" id="theme-btn">🌙 Dark</button>
+      </div>
+    </header>
+
+    <!-- CONTENT VIEWS -->
+    <main class="content-area">
+      
+      <!-- VIEW: INVESTIGATION COPILOT (CHATGPT STYLE SPLIT PANE WITH DRAGGABLE RESIZER) -->
+      <section id="view-investigation" class="view-panel copilot-workspace">
+        
+        <!-- LEFT: DOCKED PROBLEM DOCK -->
+        <div class="copilot-input-pane" id="copilot-left-pane">
+          <div class="pane-header">
+            <span class="pane-title">📝 Incident Telemetry</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-form">Clear</button>
+              <select id="sample-select" style="max-width: 140px; font-size: 0.78rem; padding: 4px 6px;">
+                <option value="">— Load Sample —</option>
+              </select>
+            </div>
+          </div>
+
+          <form id="investigation-form" class="copilot-form-scroll" novalidate>
+            <div>
+              <label>Problem / Incident Title *
+                <input name="title" id="inp-title" placeholder="e.g., Redis pool exhaustion on checkout" required maxlength="200">
+              </label>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label>Affected Service *
+                  <input name="service" id="inp-service" placeholder="e.g., payments-api" required maxlength="80">
+                </label>
+              </div>
+              <div>
+                <label>Environment
+                  <select name="environment" id="inp-env">
+                    <option value="production" selected>Production</option>
+                    <option value="staging">Staging</option>
+                    <option value="canary">Canary</option>
+                    <option value="development">Development</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label>Severity Level
+                  <select name="severity" id="inp-severity">
+                    <option value="critical">Critical (P1)</option>
+                    <option value="high" selected>High (P2)</option>
+                    <option value="medium">Medium (P3)</option>
+                    <option value="low">Low (P4)</option>
+                  </select>
+                </label>
+              </div>
+              <div>
+                <label>Category
+                  <select name="category" id="inp-category">
+                    <option value="">AI Auto-Detect</option>
+                    <option value="database">Database</option>
+                    <option value="network">Network</option>
+                    <option value="infrastructure">Infrastructure</option>
+                    <option value="application">Application</option>
+                    <option value="authentication">Authentication</option>
+                    <option value="security">Security</option>
+                    <option value="performance">Performance</option>
+                    <option value="deployment">Deployment</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label>Description of Impact *
+                <textarea name="description" id="inp-desc" rows="2" placeholder="What broke or what are users experiencing?" required maxlength="4000"></textarea>
+              </label>
+            </div>
+
+            <div>
+              <label>Observed Symptoms & Error Messages *
+                <textarea name="symptoms" id="inp-symptoms" rows="2" placeholder="e.g., HTTP 502s, redis connection pool exhausted" required maxlength="2000"></textarea>
+              </label>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column;">
+              <label>Server Logs & Traces (Auto-redacted)
+                <textarea name="logs" id="inp-logs" rows="4" class="mono" placeholder="Paste stack trace or error log snippets..."></textarea>
+              </label>
+            </div>
+
+            <label style="flex-direction: row; align-items: center; gap: 8px; font-size: 0.78rem; background: rgba(59, 130, 246, 0.08); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.2);">
+              <input type="checkbox" id="inp-use-memory" checked style="width: 15px; height: 15px;">
+              <span><strong>Enrich with Hindsight Memory</strong></span>
+            </label>
+          </form>
+
+          <div class="copilot-footer-actions">
+            <button type="submit" form="investigation-form" class="btn btn-primary" id="btn-run-investigation" style="width: 100%;">
+              🚀 Run AI Investigation
+            </button>
+            <span id="investigation-spinner" class="text-muted hidden" style="font-size: 0.75rem; margin-left: 8px;">Analyzing…</span>
+          </div>
+        </div>
+
+        <!-- RESIZABLE SPLIT DRAGGER -->
+        <div class="split-resizer" id="copilot-resizer" title="Drag to adjust pane width">
+          <div class="resizer-handle"></div>
+        </div>
+
+        <!-- RIGHT: CHATGPT-STYLE RESULTS PANE WITH SUBTABS -->
+        <div class="copilot-results-pane" id="copilot-right-pane">
+          
+          <div class="results-tabbar">
+            <div class="subtab-group">
+              <button class="subtab-btn active" data-subtab="actions">🛠 Resolution Roadmap</button>
+              <button class="subtab-btn" data-subtab="rca">🔍 Root Cause Analysis</button>
+              <button class="subtab-btn" data-subtab="memories">🧠 Cited Memories (<span id="res-mem-count">0</span>)</button>
+              <button class="subtab-btn" data-subtab="timeline">⏱ Timeline</button>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span id="res-incident-id" class="badge badge-medium">INC-XXXX</span>
+              <span id="res-memory-badge" class="badge">Status</span>
+            </div>
+          </div>
+
+          <div class="results-content-scroll">
+            
+            <div id="investigation-placeholder" style="text-align: center; padding: 100px 20px; color: var(--text-muted);">
+              <div style="font-size: 2.8rem; margin-bottom: 12px;">🧠</div>
+              <h3 style="color: var(--text-ivory); font-size: 1.25rem; font-family: var(--font-brand); letter-spacing: 0.5px;">Postmortem AI Incident Copilot</h3>
+              <p style="margin-top: 6px; font-size: 0.88rem; max-width: 440px; margin-left: auto; margin-right: auto;">
+                Select a sample on the left or type your incident symptoms. The engine will retrieve relevant Hindsight episodic memories and generate prioritized recommendations.
+              </p>
+            </div>
+
+            <div id="investigation-result-panel" class="hidden">
+              
+              <!-- SUBTAB 1: ACTIONS (ROADMAP) -->
+              <div id="subtab-content-actions" class="subtab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <div>
+                    <h4 style="font-size: 0.95rem; font-weight: 700;">Prioritized Troubleshooting Roadmap</h4>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Guarded deterministically: WORKED ranks high, FAILED warns low</span>
+                  </div>
+                  <button class="btn btn-primary btn-sm" id="btn-save-outcomes" style="background: #10B981;">
+                    💾 Save Outcomes to Memory
+                  </button>
+                </div>
+                
+                <div id="res-actions-list"></div>
+                <div id="outcome-save-status" style="font-size: 0.82rem; color: #34D399; font-weight: 600; margin-top: 8px;"></div>
+              </div>
+
+              <!-- SUBTAB 2: RCA -->
+              <div id="subtab-content-rca" class="subtab-content hidden">
+                <div class="rca-box">
+                  <div class="rca-title">
+                    <span>PRIMARY HYPOTHESIS</span>
+                    <span id="res-rca-confidence" class="badge">CONFIDENCE</span>
+                  </div>
+                  <p id="res-rca-hypo" style="font-size: 0.95rem; font-weight: 600;"></p>
+                  <p id="res-rca-explanation" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px;"></p>
+                </div>
+
+                <div class="card">
+                  <div class="card-header"><h4 class="card-title">Contributing Factors & Logs</h4></div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem; margin-bottom: 10px;">
+                    <div><strong>Category:</strong> <span id="res-cat" class="badge badge-cyan" style="margin-left: 4px;">App</span></div>
+                    <div><strong>Blast Radius:</strong> <span id="res-affected-svcs" style="color: #67E8F9; font-weight: 600;">--</span></div>
+                  </div>
+                  <div id="res-rca-factors" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-secondary);"></div>
+                </div>
+              </div>
+
+              <!-- SUBTAB 3: MEMORIES -->
+              <div id="subtab-content-memories" class="subtab-content hidden">
+                <div class="card">
+                  <div class="card-header">
+                    <h4 class="card-title">Historical Memories Retrieved from Hindsight</h4>
+                  </div>
+                  <div id="res-memories-cited"></div>
+                </div>
+              </div>
+
+              <!-- SUBTAB 4: TIMELINE -->
+              <div id="subtab-content-timeline" class="subtab-content hidden">
+                <div class="card">
+                  <div class="card-header"><h4 class="card-title">Incident Event Timeline</h4></div>
+                  <div class="timeline" id="res-timeline-container"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: OVERVIEW -->
+      <section id="view-overview" class="view-panel hidden">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+          <div class="kpi-card gold-highlight" style="border-left: 4px solid var(--champagne-gold); margin-bottom: 0;">
+            <span class="kpi-label">TOTAL INCIDENTS</span>
+            <div style="font-size: 2rem; font-weight: 800;" id="kpi-total">--</div>
+            <span class="kpi-meta" style="color: var(--text-muted);">Enterprise cluster</span>
+          </div>
+          <div class="kpi-card" style="border-left: 4px solid var(--high); margin-bottom: 0;">
+            <span class="kpi-label">ACTIVE / OPEN</span>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--high);" id="kpi-open">--</div>
+            <span class="kpi-meta" style="color: var(--text-muted);">Requires triage</span>
+          </div>
+          <div class="kpi-card emerald" style="border-left: 4px solid var(--emerald); margin-bottom: 0;">
+            <span class="kpi-label">CONFIRMED RESOLVED</span>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--emerald);" id="kpi-resolved">--</div>
+            <span class="kpi-meta" style="color: var(--text-muted);">Outcome verified</span>
+          </div>
+          <div class="kpi-card cyan-highlight" style="border-left: 4px solid var(--ice-cyan); margin-bottom: 0;">
+            <span class="kpi-label">MEMORY ASSISTED</span>
+            <div style="font-size: 2rem; font-weight: 800;" id="kpi-memory">--</div>
+            <span class="kpi-meta" style="color: var(--text-muted);">Hindsight enriched</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Recent Critical & High Severity Incidents</h3>
+            <button class="btn btn-cyan btn-sm" id="btn-quick-new">➕ Report New Problem</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Title</th><th>Service</th><th>Severity</th><th>Status</th><th>Created</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="overview-recent-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: INCIDENTS HUB -->
+      <section id="view-incidents" class="view-panel hidden">
+        <div class="card">
+          <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h3 class="card-title" style="margin-bottom: 0;">Incidents Management Hub</h3>
+              <span id="incidents-count-badge" class="badge" style="background: rgba(112, 214, 206, 0.12); color: var(--ice-cyan); border: 1px solid rgba(112, 214, 206, 0.3); font-size: 0.72rem;">0 incidents</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="incidents-search-input" placeholder="🔍 Search incidents..." style="width: 200px; padding: 5px 10px; font-size: 0.8rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; color: var(--text-ivory);">
+              <select id="incidents-severity-filter" style="padding: 5px 8px; font-size: 0.8rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; color: var(--text-ivory);">
+                <option value="ALL">All Severities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+              <select id="incidents-status-filter" style="padding: 5px 8px; font-size: 0.8rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; color: var(--text-ivory);">
+                <option value="ALL">All Status</option>
+                <option value="Open">Open</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+              <button class="btn btn-cyan btn-sm" onclick="window.switchToNewProblem()">➕ Enter New Problem</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="incidents-table">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="id">ID <span class="sort-icon" id="sort-icon-id">↕</span></th>
+                  <th class="sortable" data-sort="title">Title <span class="sort-icon" id="sort-icon-title">↕</span></th>
+                  <th class="sortable" data-sort="service">Service <span class="sort-icon" id="sort-icon-service">↕</span></th>
+                  <th class="sortable" data-sort="severity">Severity <span class="sort-icon" id="sort-icon-severity">↕</span></th>
+                  <th class="sortable" data-sort="category">Category <span class="sort-icon" id="sort-icon-category">↕</span></th>
+                  <th class="sortable" data-sort="status">Status <span class="sort-icon" id="sort-icon-status">↕</span></th>
+                  <th class="sortable" data-sort="created">Created <span class="sort-icon" id="sort-icon-created">↕</span></th>
+                  <th style="text-align: right; width: 70px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="incidents-hub-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: MEMORY INTELLIGENCE -->
+      <section id="view-memory" class="view-panel hidden">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Hindsight Long-Term Memory Bank Inspector</h3>
+            <div style="display: flex; gap: 8px;">
+              <input id="mem-search-input" placeholder="Search memories..." style="width: 220px;">
+              <button class="btn btn-secondary btn-sm" id="btn-mem-search">Search</button>
+              <button class="btn btn-violet btn-sm" id="btn-mem-seed">Load Seed History</button>
+              <button class="btn btn-danger btn-sm" id="btn-mem-reset">Reset Bank</button>
+            </div>
+          </div>
+          <p id="mem-status-line" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;"></p>
+          <div id="mem-cards-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: RECURRING PATTERNS -->
+      <section id="view-patterns" class="view-panel hidden">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Recurring Incident Pattern Detection</h3></div>
+          <div id="patterns-list" style="display: flex; flex-direction: column; gap: 14px;"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: SERVICE TOPOLOGY -->
+      <section id="view-services" class="view-panel hidden">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Service Dependency Topology</h3></div>
+          <div class="service-graph" id="service-graph-container"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: ANALYTICS -->
+      <section id="view-analytics" class="view-panel hidden">
+        <div class="card"><div id="analytics-kpis" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;"></div></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="card"><div class="card-header"><h4 class="card-title">Severity Breakdown</h4></div><div id="analytics-severity-list"></div></div>
+          <div class="card"><div class="card-header"><h4 class="card-title">Category Distribution</h4></div><div id="analytics-category-list"></div></div>
+        </div>
+      </section>
+
+      <!-- VIEW: REPORTS -->
+      <section id="view-reports" class="view-panel hidden">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Postmortem Incident Reports</h3></div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>Incident ID</th><th>Title</th><th>Service</th><th>Download Reports</th></tr>
+              </thead>
+              <tbody id="reports-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast-notification"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
